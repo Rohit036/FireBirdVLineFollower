@@ -1,3 +1,4 @@
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -27,19 +28,19 @@ void lcd_port_config (void)
 //ADC pin configuration
 void adc_pin_config (void)
 {
- DDRF = 0x00; 
- PORTF = 0x00;
- DDRK = 0x00;
- PORTK = 0x00;
+	DDRF = 0x00; 
+	PORTF = 0x00;
+	DDRK = 0x00;
+	PORTK = 0x00;
 }
 
 //Function to configure ports to enable robot's motion
 void motion_pin_config (void) 
 {
- DDRA = DDRA | 0x0F;
- PORTA = PORTA & 0xF0;
- DDRL = DDRL | 0x18;   //Setting PL3 and PL4 pins as output for PWM generation
- PORTL = PORTL | 0x18; //PL3 and PL4 pins are for velocity control using PWM.
+	DDRA = DDRA | 0x0F;
+	PORTA = PORTA & 0xF0;
+ 	DDRL = DDRL | 0x18;   //Setting PL3 and PL4 pins as output for PWM generation
+ 	PORTL = PORTL | 0x18; //PL3 and PL4 pins are for velocity control using PWM.
 }
 
 //Function to Initialize PORTS
@@ -68,7 +69,7 @@ void timer5_init()
 	TCCR5A = 0xA9;	/*{COM5A1=1, COM5A0=0; COM5B1=1, COM5B0=0; COM5C1=1 COM5C0=0}
  					  For Overriding normal port functionality to OCRnA outputs.
 				  	  {WGM51=0, WGM50=1} Along With WGM52 in TCCR5B for Selecting FAST PWM 8-bit Mode*/
-	
+
 	TCCR5B = 0x0B;	//WGM12=1; CS12=0, CS11=1, CS10=1 (Prescaler=64)
 }
 
@@ -117,7 +118,7 @@ void velocity (unsigned char left_motor, unsigned char right_motor)
 //Function used for setting motor's direction
 void motion_set (unsigned char Direction)
 {
- unsigned char PortARestore = 0;
+	unsigned char PortARestore = 0;
 
  Direction &= 0x0F; 		// removing upper nibbel for the protection
  PortARestore = PORTA; 		// reading the PORTA original status
@@ -128,30 +129,30 @@ void motion_set (unsigned char Direction)
 
 void forward (void) 
 {
-  motion_set (0x06);
+	motion_set (0x06);
 }
 
 void stop (void)
 {
-  motion_set (0x00);
+	motion_set (0x00);
 }
 
 void left (void) //Left wheel backward, Right wheel forward
 {
-  motion_set(0x05);
+	motion_set(0x05);
 }
 
 void right (void) //Left wheel forward, Right wheel backward
 {
-  motion_set(0x0A);
+	motion_set(0x0A);
 }
 
 void init_devices (void)
 {
  	cli(); //Clears the global interrupts
-	port_init();
-	adc_init();
-	timer5_init();
+ 	port_init();
+ 	adc_init();
+ 	timer5_init();
 	sei();   //Enables the global interrupts
 }
 
@@ -181,30 +182,48 @@ int main()
 		{
 			flag=1;
 			forward();
-			//velocity(150,150);
+			velocity(150,150);
 		}
 
-		if((Left_white_line>0x28) && (Right_white_line<0x28) && (flag==0))
+		
+		if(Center_white_line<0x28 && Left_white_line<0x28 && Right_white_line>0x28)
 		{
 			flag=1;
-			right();
-			//forward();
-			//velocity(130,50);
+			stop();
+			left(); 
+						
 		}
 
-		if((Left_white_line<0x28) && (Right_white_line>0x28) && (flag==0))
+		if(Center_white_line>0x28 && Left_white_line<0x28 && Right_white_line>0x28)
 		{
 			flag=1;
-			left();
-			//forward();
-			//velocity(130,50);
+			stop();						
+			left(); 
+						
 		}
 
-		//if(Center_white_line>0x28 && Left_white_line>0x28 && Right_white_line>0x28)
-		//{
-		//	forward();
-		//	velocity(0,0);
-		//}
+		if(Center_white_line<0x28 && Left_white_line>0x28 && Right_white_line<0x28)
+		{
+		flag=1;
+		stop();
+		right();
 
-	}
+		}
+
+		if(Center_white_line>0x28 && Left_white_line>0x28 && Right_white_line<0x28)
+		{
+		flag=1;
+		stop();
+		right();
+
+		}
+
+		if(Center_white_line>0x28 && Left_white_line>0x28 && Right_white_line>0x28)
+		{
+		forward();
+		velocity(0,0);
+
+		}
+
+}
 }
